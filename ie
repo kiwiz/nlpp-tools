@@ -1,0 +1,75 @@
+#!/usr/bin/python
+from img import Image, Package, FileWindow
+import os, sys, argparse
+
+def package_fn(img_dir, i, new=False):
+    return '%s/%s%04d' % (img_dir, 'new_' if new else '', i)
+
+parser = argparse.ArgumentParser('NLPP img manipulation script')
+parser.add_argument('--src_img', help='Source img file', default='img.bin')
+parser.add_argument('--img_dir', help='Directory with unpacked data', default='img_data')
+
+subparsers = parser.add_subparsers(title='subcommands', dest='cmd')
+
+unpack_parser = subparsers.add_parser('unpack', help='Unpack resources (Defaults to all)')
+unpack_parser.add_argument('--idx', type=int, nargs='+', help='Unpack a specific resource')
+
+repack_parser = subparsers.add_parser('repack', help='Repack resources (Defaults to all)')
+repack_parser.add_argument('--idx', type=int, nargs='+', help='Repack a specific resource')
+repack_parser.add_argument('--dst_img', help='Destination img file', default='new_img.bin')
+
+args = parser.parse_args()
+
+# Parse source img
+print '[+] Parsing img'
+img = Image(args.src_img)
+img.parse(False)
+
+# Select entries
+entries = []
+if args.idx is None:
+    entries = enumerate(img.entries)
+else:
+    for i in args.idx:
+        if i < 0 or i >= len(img.entries):
+            print '[-] Idx "%04d" not found!' % i
+            sys.exit(1)
+        if img.entries[i] is None:
+            print '[-] Idx "%04d" is empty!' % i
+            sys.exit(2)
+        entries.append((i, img.entries[i]))
+
+if args.cmd == 'unpack':
+    if not os.path.exists(args.img_dir):
+        os.makedirs(args.img_dir)
+
+    for k,res in entries:
+        if res is None:
+            continue
+
+        print '[+] Unpacking Idx "%04d"' % k
+        rfh = open(package_fn(args.img_dir, k), 'wb')
+        rfh.write(res.fw.read())
+        rfh.close()
+
+if args.cmd == 'repack':
+    for k,res in entries:
+        if res is None:
+            continue
+
+        new = os.path.exists(package_fn(args.img_dir, k, True))
+        fw = FileWindow(package_fn(args.img_dir, k, new))
+        img.entries[k].fw = fw
+
+    for k,res in enumerate(img.entries):
+        if res is None:
+            continue
+
+        img.entries[k].parse(False)
+
+    print '[+] Writing img'
+    nfh = open(args.dst_img, 'wb')
+    img.write(nfh)
+    nfh.close()
+
+print '[+] Done!'

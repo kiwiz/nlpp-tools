@@ -1,0 +1,12 @@
+#!/bin/bash
+
+fn=$(tempfile)
+for i in img_data/*_data/*.texi
+do
+    cp "$i" "$fn".texi
+    cp "$i".seri "$fn".texi.seri
+    ./etc/bin/cv "$fn".texi.seri
+    ./etc/bin/png2texi.exe "$fn".texi
+    cp "$fn".png "$i".png
+    echo $i
+done
