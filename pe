@@ -2,44 +2,50 @@
 from img import Package, FileWindow, SERI
 import os, sys, argparse
 
+
 def element_fn(pkg_dir, fn, metadata):
     if metadata:
-        fn += '.seri'
-    return '%s/%s' % (pkg_dir, fn)
+        fn += ".seri"
+    return "%s/%s" % (pkg_dir, fn)
 
-parser = argparse.ArgumentParser('NLPP package manipulation script')
-parser.add_argument('src_pkg', help='Source package file')
 
-subparsers = parser.add_subparsers(title='subcommands', dest='cmd')
+parser = argparse.ArgumentParser("NLPP package manipulation script")
+parser.add_argument("src_pkg", help="Source package file")
 
-list_parser = subparsers.add_parser('list', help='List resources')
+subparsers = parser.add_subparsers(title="subcommands", dest="cmd")
 
-unpack_parser = subparsers.add_parser('unpack', help='Unpack resources')
-unpack_parser.add_argument('--idx', type=int, nargs='+', help='Unpack a specific resource')
+list_parser = subparsers.add_parser("list", help="List resources")
 
-repack_parser = subparsers.add_parser('repack', help='Repack resources')
-repack_parser.add_argument('--idx', type=int, nargs='+', help='Repack a specific resource')
+unpack_parser = subparsers.add_parser("unpack", help="Unpack resources")
+unpack_parser.add_argument(
+    "--idx", type=int, nargs="+", help="Unpack a specific resource"
+)
 
-parser.add_argument('--pkg_dir', help='Directory with unpacked data', default=None)
-parser.add_argument('--dst_pkg', help='Destination package file', default=None)
+repack_parser = subparsers.add_parser("repack", help="Repack resources")
+repack_parser.add_argument(
+    "--idx", type=int, nargs="+", help="Repack a specific resource"
+)
+
+parser.add_argument("--pkg_dir", help="Directory with unpacked data", default=None)
+parser.add_argument("--dst_pkg", help="Destination package file", default=None)
 
 args = parser.parse_args()
 
 if args.pkg_dir is None:
-    args.pkg_dir = args.src_pkg + '_data'
+    args.pkg_dir = args.src_pkg + "_data"
 if args.dst_pkg is None:
     path, fn = os.path.split(args.src_pkg)
-    args.dst_pkg = os.path.join(path, 'new_' + fn)
+    args.dst_pkg = os.path.join(path, "new_" + fn)
 
 # Parse source package
 pkg = Package(FileWindow(args.src_pkg), 0)
 pkg.parse(False)
 
-if args.cmd == 'list':
+if args.cmd == "list":
     for elem in pkg.entries:
         print elem.fn
 
-if args.cmd == 'unpack':
+if args.cmd == "unpack":
     if not os.path.exists(args.pkg_dir):
         os.makedirs(args.pkg_dir)
 
@@ -57,7 +63,7 @@ if args.cmd == 'unpack':
                 sys.exit(2)
             entries.append((i, pkg.entries[i]))
 
-    for k,res in entries:
+    for k, res in entries:
         if res is None:
             continue
 
@@ -66,12 +72,12 @@ if args.cmd == 'unpack':
         fn = element_fn(args.pkg_dir, res.fn, type(res) == SERI)
 
         print '[+] Unpacking %i: "%s"' % (k, res.fn)
-        rfh = open(fn, 'wb')
+        rfh = open(fn, "wb")
         rfh.write(res.parsed_for_file())
         rfh.close()
 
-if args.cmd == 'repack':
-    for k,res in enumerate(pkg.entries):
+if args.cmd == "repack":
+    for k, res in enumerate(pkg.entries):
         if res is None:
             continue
 
@@ -79,7 +85,7 @@ if args.cmd == 'repack':
         pkg.entries[k].fw = fw
         pkg.entries[k].unparse()
 
-    print '[+] Writing pkg'
-    nfh = open(args.dst_pkg, 'wb')
+    print "[+] Writing pkg"
+    nfh = open(args.dst_pkg, "wb")
     pkg.write(nfh)
     nfh.close()
