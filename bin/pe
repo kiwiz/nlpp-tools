@@ -1,6 +1,8 @@
 #!/usr/bin/python
-from img import Package, FileWindow, SERI
 import os, sys, argparse
+
+sys.path.append(".")
+from img import Package, FileWindow, SERI
 
 
 def element_fn(pkg_dir, fn, metadata):

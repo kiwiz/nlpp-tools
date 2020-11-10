@@ -1,6 +1,8 @@
 #!/usr/bin/python
-from img import Image, Package, FileWindow
 import os, sys, argparse
+
+sys.path.append(".")
+from img import Image, Package, FileWindow
 
 
 def package_fn(img_dir, i, new=False):
