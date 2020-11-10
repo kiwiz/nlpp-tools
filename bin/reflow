@@ -27,6 +27,7 @@ def main():
         for a, b in MAPPINGS.items():
             eng = eng.replace(a, b)
 
+        eng = textwrap.wrap(eng, width=MAX_WIDTH)
         writer.writerow([idx, jap, eng])
 
 
