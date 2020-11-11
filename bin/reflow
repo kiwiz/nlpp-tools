@@ -16,8 +16,12 @@ MAPPINGS = {
 
 def main():
     parser = argparse.ArgumentParser("NLPP text reflowing tool")
-    parser.add_argument("input", type=argparse.FileType("r"), help="Input CSV file")
-    parser.add_argument("output", type=argparse.FileType("w"), help="Output CSV file")
+    parser.add_argument(
+        "input", type=argparse.FileType("r", encoding="utf8"), help="Input CSV file"
+    )
+    parser.add_argument(
+        "output", type=argparse.FileType("w", encoding="utf8"), help="Output CSV file"
+    )
     args = parser.parse_args()
 
     writer = csv.writer(args.output)
