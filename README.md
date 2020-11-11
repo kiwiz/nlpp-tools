@@ -2,9 +2,8 @@
 
 ## Setup ##
 
-- Download and install [Python 2.7](https://www.python.org/downloads/). Make sure to check the "Add to PATH" option!
+- Download and install [Python 3](https://www.python.org/downloads/). Make sure to check the "Add to PATH" option!
 - Open up Command Prompt and run `pip install pyyaml`
-- (Optional) Run `unpack_all_packages.bat` to automatically extract everything!
 
 ## Tools ##
 
