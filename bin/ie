@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import os, sys, argparse
 
 sys.path.append(".")
@@ -36,8 +36,12 @@ repack_parser.add_argument(
 
 args = parser.parse_args()
 
+if args.cmd is None:
+    parser.print_help()
+    sys.exit(1)
+
 # Parse source img
-print "[+] Parsing img"
+print("[+] Parsing img")
 img = Image(args.src_img)
 img.parse(False)
 
@@ -48,10 +52,10 @@ if args.idx is None:
 else:
     for i in args.idx:
         if i < 0 or i >= len(img.entries):
-            print '[-] Idx "%04d" not found!' % i
+            print('[-] Idx "%04d" not found!' % i)
             sys.exit(1)
         if img.entries[i] is None:
-            print '[-] Idx "%04d" is empty!' % i
+            print('[-] Idx "%04d" is empty!' % i)
             sys.exit(2)
         entries.append((i, img.entries[i]))
 
@@ -63,7 +67,7 @@ if args.cmd == "unpack":
         if res is None:
             continue
 
-        print '[+] Unpacking Idx "%04d"' % k
+        print('[+] Unpacking Idx "%04d"' % k)
         rfh = open(package_fn(args.img_dir, k), "wb")
         rfh.write(res.fw.read())
         rfh.close()
@@ -83,9 +87,9 @@ if args.cmd == "repack":
 
         img.entries[k].parse(False)
 
-    print "[+] Writing img"
+    print("[+] Writing img")
     nfh = open(args.dst_img, "wb")
     img.write(nfh)
     nfh.close()
 
-print "[+] Done!"
+print("[+] Done!")

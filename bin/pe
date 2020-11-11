@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import os, sys, argparse
 
 sys.path.append(".")
@@ -45,7 +45,7 @@ pkg.parse(False)
 
 if args.cmd == "list":
     for elem in pkg.entries:
-        print elem.fn
+        print(elem.fn)
 
 if args.cmd == "unpack":
     if not os.path.exists(args.pkg_dir):
@@ -58,10 +58,10 @@ if args.cmd == "unpack":
     else:
         for i in args.idx:
             if i < 0 or i >= len(pkg.entries):
-                print '[-] Idx "%04d" not found!' % i
+                print('[-] Idx "%04d" not found!' % i)
                 sys.exit(1)
             if pkg.entries[i] is None:
-                print '[-] Idx "%04d" is empty!' % i
+                print('[-] Idx "%04d" is empty!' % i)
                 sys.exit(2)
             entries.append((i, pkg.entries[i]))
 
@@ -73,7 +73,7 @@ if args.cmd == "unpack":
 
         fn = element_fn(args.pkg_dir, res.fn, type(res) == SERI)
 
-        print '[+] Unpacking %i: "%s"' % (k, res.fn)
+        print('[+] Unpacking %i: "%s"' % (k, res.fn))
         rfh = open(fn, "wb")
         rfh.write(res.parsed_for_file())
         rfh.close()
@@ -87,7 +87,7 @@ if args.cmd == "repack":
         pkg.entries[k].fw = fw
         pkg.entries[k].unparse()
 
-    print "[+] Writing pkg"
+    print("[+] Writing pkg")
     nfh = open(args.dst_pkg, "wb")
     pkg.write(nfh)
     nfh.close()
