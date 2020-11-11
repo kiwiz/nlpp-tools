@@ -8,7 +8,7 @@ from img import Package, FileWindow, SERI
 def element_fn(pkg_dir, fn, metadata):
     if metadata:
         fn += ".seri"
-    return "%s/%s" % (pkg_dir, fn)
+    return "%s/%s" % (pkg_dir, fn.decode("utf8"))
 
 
 parser = argparse.ArgumentParser("NLPP package manipulation script")

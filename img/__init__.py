@@ -436,7 +436,7 @@ class StrTable(object):
         self.map = {}
 
     def __getitem__(self, pos):
-        end = self.data.index("\0", pos)
+        end = self.data.index(b"\0", pos)
         return self.data[pos:end]
 
     def update(self, data, slots):
@@ -449,10 +449,10 @@ class StrTable(object):
                 self.map[self[v]] = i
 
     def find_str(self, s):
-        return self.data.index(s + "\0")
+        return self.data.index(s + b"\0")
 
     def add_str(self, s):
-        s0 = s + "\0"
+        s0 = s + b"\0"
         idx = self.data.find(s0)
         if idx == -1:
             idx = len(self.data)
@@ -517,7 +517,7 @@ class Package(Resource):
         ) = Package.parse_header(data)
         self.dec_len = dec_len
         self.dec_data_off = dec_data_off
-        self.typ0 = ord(typ[5]) == 0x30
+        self.typ0 = typ[5] == 0x30
 
         off = self.fw.tell()
         self.fw.seek(str_table_off)
@@ -633,7 +633,7 @@ class Package(Resource):
 
             fh.seek(abs_off + curr_data_off)
             if curr_off > curr_data_off:
-                fh.write("\0" * (curr_off - curr_data_off))
+                fh.write(b"\0" * (curr_off - curr_data_off))
 
         self.dec_len = dec_curr_off
         self.dec_data_off = dec_data_off
@@ -642,7 +642,7 @@ class Package(Resource):
         fh.write(
             struct.pack(
                 "=6sH6I",
-                "PACK\n" + "0" if self.typ0 else " ",
+                b"PACK\n" + b"0" if self.typ0 else " ",
                 len(self.entries),
                 ptr_off,
                 str_table_off,
@@ -806,7 +806,7 @@ class Image(object):
 
         # Generate and write the index table
         for idx, res in enumerate(self.entries):
-            typ, num1, num2, num3, num4 = "\0\0\0\0", 0x0, 0x0, 0x0, 0x8
+            typ, num1, num2, num3, num4 = b"\0\0\0\0", 0x0, 0x0, 0x0, 0x8
             if res is not None:
                 typ, num1, num2, num3, num4 = res.get_header()
             fh.write(struct.pack("=4s4x2I2xBB", typ, num1, num2, num3, num4))
@@ -838,7 +838,7 @@ class Image(object):
             next_empty_addr = self.NEXT_BLOCK_ADDR(fh.tell())
 
             # Pad to next block
-            fh.write("\0" * (next_empty_addr - fh.tell()))
+            fh.write(b"\0" * (next_empty_addr - fh.tell()))
 
             fh.seek(off)
 
