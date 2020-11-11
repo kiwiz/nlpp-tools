@@ -20,9 +20,9 @@ def main():
     parser.add_argument("output", type=str, help="Output CSV file")
     args = parser.parse_args()
 
-    writer = csv.writer(open(args.output, "w", newline=""))
+    writer = csv.writer(open(args.output, "w", encoding="utf8", newline=""))
 
-    for idx, jap, eng in csv.reader(open(args.input, "r", newline="")):
+    for idx, jap, eng in csv.reader(open(args.input, "r", encoding="utf8", newline="")):
         orig = eng
         for a, b in MAPPINGS.items():
             eng = eng.replace(a, b)
