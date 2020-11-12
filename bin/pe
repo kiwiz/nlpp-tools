@@ -8,7 +8,7 @@ from img import Package, FileWindow, SERI
 def element_fn(pkg_dir, fn, metadata):
     if metadata:
         fn += ".seri"
-    return "%s/%s" % (pkg_dir, fn.decode("utf8"))
+    return "%s/%s" % (pkg_dir, fn)
 
 
 parser = argparse.ArgumentParser("NLPP package manipulation script")
@@ -73,7 +73,7 @@ if args.cmd == "unpack":
 
         fn = element_fn(args.pkg_dir, res.fn, type(res) == SERI)
 
-        print('[+] Unpacking %i: "%s"' % (k, res.fn.decode("utf8")))
+        print('[+] Unpacking %i: "%s"' % (k, res.fn))
         rfh = open(fn, "wb")
         rfh.write(res.parsed_for_file())
         rfh.close()

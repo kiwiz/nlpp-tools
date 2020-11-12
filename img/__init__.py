@@ -112,7 +112,6 @@ class Element(object):
         if self.is_cmp:
             data = zlib.compress(data, level=9)
             cmp_len = len(data)
-            print(cmp_len)
         fh.write(data)
 
         return cmp_len, dec_len
@@ -203,11 +202,11 @@ class SERI(Element):
         self.data = self.parse_body(0xA, 0x4 + data_off, cnt, recursive)
 
     def unparse(self):
-        self.data = yaml.load(self.read())
+        self.data = yaml.safe_load(self.read())
         self._index_strings(self.data)
 
     def _index_strings(self, data):
-        for k, v in data.iteritems():
+        for k, v in data.items():
             self.str_table.add_str(k)
             if type(v) == dict:
                 self._index_strings(v)
@@ -216,7 +215,7 @@ class SERI(Element):
                     self._index_strings(d)
 
     def parsed(self):
-        return yaml.dump(self.data)
+        return yaml.dump(self.data).encode('utf8')
 
     def unparsed(self):
         return super(SERI, self).unparsed()
@@ -286,7 +285,8 @@ class SERI(Element):
         elif atyp == b"a":
             for aval_off in aval_table:
                 self.fw.seek(data_off + aval_off)
-                ret.append(self.read_arr(data_off, str_table))
+                ret.append(self.read_arr(k, data_off, str_table))
+
         elif atyp == b"s":
             for aval_off in aval_table:
                 ret.append(self.str_table[aval_off])
@@ -312,7 +312,7 @@ class SERI(Element):
         sz = self.write_body(fh, abs_off + 0xA + data_off, 0, self.data)
         fh.seek(abs_off)
 
-        fh.write(struct.pack("=4sIH", "SERI", 0x6 + data_off, len(self.data)))
+        fh.write(struct.pack("=4sIH", b"SERI", 0x6 + data_off, len(self.data)))
 
         return 0x0, 0xA + data_off + sz
 
@@ -328,7 +328,7 @@ class SERI(Element):
 
             typ = type(v)
             typ_name = None
-            if typ == str:
+            if typ == bytes:
                 if k in SERI.FN_INDEX:
                     fh.write(struct.pack("=2H", name_off, curr_off))
                     fh.seek(data_abs_off + curr_off)
@@ -369,7 +369,7 @@ class SERI(Element):
                 typ_name = b"h"
                 curr_off += self.write_body(fh, data_abs_off, curr_off, v)
             else:
-                raise (Exception("Unknown type: " + typ))
+                raise (Exception("Unknown type: " + str(typ)))
             fh.seek(abs_off + type_table_off + i)
             fh.write(typ_name)
             i += 1
@@ -399,9 +399,9 @@ class SERI(Element):
                 curr_off += 0x4
         elif atyp == list:
             atyp_name = b"a"
-            for arr in v:
+            for arr in data:
                 aval_table.append(curr_off)
-                curr_off += self.write_arr(fh, data_abs_off, curr_off, arr)
+                curr_off += self.write_arr(fh, data_abs_off, curr_off, k, arr)
         elif atyp == bytes:
             if k in SERI.ARR_FN_INDEX:
                 atyp_name = b"i"
@@ -420,7 +420,7 @@ class SERI(Element):
                 aval_table.append(curr_off)
                 curr_off += self.write_body(fh, data_abs_off, curr_off, v)
         else:
-            raise (Exception("Unknown type: " + atyp))
+            raise (Exception("Unknown type: " + str(atyp)))
 
         fh.seek(abs_off + aval_table_off)
         fh.write(struct.pack("=%dH" % len(data), *aval_table))
@@ -453,6 +453,8 @@ class StrTable(object):
         return self.data.index(s + b"\0")
 
     def add_str(self, s):
+        if isinstance(s, str):
+            s = s.encode('utf8')
         s0 = s + b"\0"
         idx = self.data.find(s0)
         if idx == -1:
@@ -546,28 +548,29 @@ class Package(Resource):
             self.fw.seek(elem_off)
 
             elem = None
+            fn = self.str_table.get_str_slot(i).decode('utf8')
             if typ in [b"TEXI", b"YAML", b"MDL "]:
                 elem = SERI(
                     typ,
-                    self.str_table.get_str_slot(i),
+                    fn,
                     flags,
                     is_cmp,
                     fw,
                     self.str_table,
                 )
             elif typ in [b"    "]:
-                elem = Empty(typ, self.str_table.get_str_slot(i), flags)
+                elem = Empty(typ, fn, flags)
             elif typ in [b"TXT "]:
-                elem = TXT(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
+                elem = TXT(typ, fn, flags, is_cmp, fw)
                 elem.read()
             elif typ in [b"TEX "]:
-                elem = Texture(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
+                elem = Texture(typ, fn, flags, is_cmp, fw)
             elif typ in [b"SMES", b"SMAT"]:
-                elem = Geometry(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
+                elem = Geometry(typ, fn, flags, is_cmp, fw)
             elif typ in [b"ARC "]:
-                elem = ARC(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
+                elem = ARC(typ, fn, flags, is_cmp, fw)
             else:
-                elem = Element(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
+                elem = Element(typ, fn, flags, is_cmp, fw)
 
             self.fw.seek(off)
             if recursive:
