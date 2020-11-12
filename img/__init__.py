@@ -127,7 +127,7 @@ class Empty(Element):
         super(Empty, self).__init__(typ, fn, flags, False, None)
 
     def read(self, decompress=True):
-        return ""
+        return b""
 
 
 """
@@ -185,8 +185,8 @@ A SERIalized YAML object (why?)
 
 
 class SERI(Element):
-    FN_INDEX = ["bone", "smes", "smat", "tex", "hair_length"]
-    ARR_FN_INDEX = ["texi", "model", "cloth", "list"]
+    FN_INDEX = [b"bone", b"smes", b"smat", b"tex", b"hair_length"]
+    ARR_FN_INDEX = [b"texi", b"model", b"cloth", b"list"]
     OFF_ENTRY_LEN = struct.calcsize("=2H")
 
     def __init__(self, typ, fn, flags, is_cmp, fw, str_table):
@@ -198,7 +198,7 @@ class SERI(Element):
     def parse(self, recursive=True):
         self.fw.seek(0x0)
         typ, data_off, cnt = struct.unpack("=4sIH", self.fw.read(0xA))
-        assert typ == "SERI"
+        assert typ == b"SERI"
         self.data = self.parse_body(0xA, 0x4 + data_off, cnt, recursive)
 
     def unparse(self):
@@ -236,25 +236,25 @@ class SERI(Element):
             k = self.str_table[name_off]
             val = None
 
-            if etyp == "s":
+            if etyp == b"s":
                 self.fw.seek(data_off + val_off)
                 (val,) = struct.unpack("I", self.fw.read(0x4))
                 val = self.str_table[val_off]
-            elif etyp == "i":
+            elif etyp == b"i":
                 self.fw.seek(data_off + val_off)
                 (val,) = struct.unpack("I", self.fw.read(0x4))
                 if k in SERI.FN_INDEX:
                     val = self.str_table.get_str_slot(val - 1)
-            elif etyp == "f":
+            elif etyp == b"f":
                 self.fw.seek(data_off + val_off)
                 (val,) = struct.unpack("f", self.fw.read(0x4))
-            elif etyp == "b":
+            elif etyp == b"b":
                 self.fw.seek(data_off + val_off)
                 (val,) = struct.unpack("?", self.fw.read(0x1))
-            elif etyp == "a":
+            elif etyp == b"a":
                 self.fw.seek(data_off + val_off)
                 val = self.read_arr(k, data_off, self.str_table, recursive)
-            elif etyp == "h":
+            elif etyp == b"h":
                 self.fw.seek(data_off + val_off)
                 (icnt,) = struct.unpack("H", self.fw.read(0x2))
                 val = self.parse_body(
@@ -271,25 +271,25 @@ class SERI(Element):
         aval_table = struct.unpack("=%dH" % acnt, self.fw.read(acnt * 0x2))
 
         ret = []
-        if atyp == "i":
+        if atyp == b"i":
             for aval_off in aval_table:
                 self.fw.seek(data_off + aval_off)
                 (val,) = struct.unpack("I", self.fw.read(0x4))
                 if k in SERI.ARR_FN_INDEX:
                     val = self.str_table.get_str_slot(val - 1)
                 ret.append(val)
-        elif atyp == "f":
+        elif atyp == b"f":
             for aval_off in aval_table:
                 self.fw.seek(data_off + aval_off)
                 ret.append(struct.unpack("f", self.fw.read(0x4))[0])
-        elif atyp == "a":
+        elif atyp == b"a":
             for aval_off in aval_table:
                 self.fw.seek(data_off + aval_off)
                 ret.append(self.read_arr(data_off, str_table))
-        elif atyp == "s":
+        elif atyp == b"s":
             for aval_off in aval_table:
                 ret.append(self.str_table[aval_off])
-        elif atyp == "h":
+        elif atyp == b"h":
             for aval_off in aval_table:
                 self.fw.seek(data_off + aval_off)
                 (icnt,) = struct.unpack("H", self.fw.read(0x2))
@@ -333,39 +333,39 @@ class SERI(Element):
                     fh.seek(data_abs_off + curr_off)
                     v = self.str_table.find_str_slot(v) + 1
                     fh.write(struct.pack("I", v))
-                    typ_name = "i"
+                    typ_name = b"i"
                     curr_off += 4
                 else:
                     fh.write(struct.pack("=2H", name_off, self.str_table.find_str(v)))
                     # print repr(struct.pack('=2H', name_off, self.str_table.find_str(v)))
-                    typ_name = "s"
+                    typ_name = b"s"
             elif typ == int:
                 fh.write(struct.pack("=2H", name_off, curr_off))
                 fh.seek(data_abs_off + curr_off)
                 fh.write(struct.pack("I", v))
-                typ_name = "i"
+                typ_name = b"i"
                 curr_off += 4
             elif typ == float:
                 fh.write(struct.pack("=2H", name_off, curr_off))
                 fh.seek(data_abs_off + curr_off)
                 fh.write(struct.pack("f", v))
-                typ_name = "f"
+                typ_name = b"f"
                 curr_off += 4
             elif typ == bool:
                 fh.write(struct.pack("=2H", name_off, curr_off))
                 fh.seek(data_abs_off + curr_off)
                 fh.write(struct.pack("?", v))
-                typ_name = "b"
+                typ_name = b"b"
                 curr_off += 1
             elif typ == list:
                 fh.write(struct.pack("=2H", name_off, curr_off))
                 fh.seek(data_abs_off + curr_off)
-                typ_name = "a"
+                typ_name = b"a"
                 curr_off += self.write_arr(fh, data_abs_off, data_off + curr_off, k, v)
             elif typ == dict:
                 fh.write(struct.pack("=2H", name_off, curr_off))
                 fh.seek(data_abs_off + curr_off)
-                typ_name = "h"
+                typ_name = b"h"
                 curr_off += self.write_body(fh, data_abs_off, curr_off, v)
             else:
                 raise (Exception("Unknown type: " + typ))
@@ -385,36 +385,36 @@ class SERI(Element):
         atyp_name = None
         aval_table = []
         if atyp == int:
-            atyp_name = "i"
+            atyp_name = b"i"
             for v in data:
                 fh.write(struct.pack("I", v))
                 aval_table.append(curr_off)
                 curr_off += 0x4
         elif atyp == float:
-            atyp_name = "f"
+            atyp_name = b"f"
             for v in data:
                 fh.write(struct.pack("f", v))
                 aval_table.append(curr_off)
                 curr_off += 0x4
         elif atyp == list:
-            atyp_name = "a"
+            atyp_name = b"a"
             for arr in v:
                 aval_table.append(curr_off)
                 curr_off += self.write_arr(fh, data_abs_off, curr_off, arr)
-        elif atyp == str:
+        elif atyp == bytes:
             if k in SERI.ARR_FN_INDEX:
-                atyp_name = "i"
+                atyp_name = b"i"
                 for v in data:
                     v = self.str_table.find_str_slot(v) + 1
                     fh.write(struct.pack("I", v))
                     aval_table.append(curr_off)
                     curr_off += 0x4
             else:
-                atyp_name = "s"
+                atyp_name = b"s"
                 for v in data:
                     aval_table.append(self.str_table.add_str(v))
         elif atyp == dict:  # OrderedDict
-            atyp_name = "h"
+            atyp_name = b"h"
             for v in data:
                 aval_table.append(curr_off)
                 curr_off += self.write_body(fh, data_abs_off, curr_off, v)
@@ -430,7 +430,7 @@ class SERI(Element):
 
 
 class StrTable(object):
-    def __init__(self, data=""):
+    def __init__(self, data=b""):
         self.data = data
         self.slots = []
         self.map = {}
@@ -471,7 +471,7 @@ class StrTable(object):
         self.slots.append(self.add_str(s))
 
     def clear(self):
-        self.data = ""
+        self.data = b""
         self.slots = []
         self.map = {}
 
@@ -493,7 +493,7 @@ class Package(Resource):
     LARGE_BLOCK_MASK = LARGE_BLOCK_SIZE - 1
 
     def __init__(self, fw, unk):
-        super(Package, self).__init__("PAK ", fw)
+        super(Package, self).__init__(b"PAK ", fw)
         self.typ0 = True
         self.dec_len = 0x0
         self.dec_data_off = 0x0
@@ -545,7 +545,7 @@ class Package(Resource):
             self.fw.seek(elem_off)
 
             elem = None
-            if typ in ["TEXI", "YAML", "MDL "]:
+            if typ in [b"TEXI", b"YAML", b"MDL "]:
                 elem = SERI(
                     typ,
                     self.str_table.get_str_slot(i),
@@ -554,16 +554,16 @@ class Package(Resource):
                     fw,
                     self.str_table,
                 )
-            elif typ in ["    "]:
+            elif typ in [b"    "]:
                 elem = Empty(typ, self.str_table.get_str_slot(i), flags)
-            elif typ in ["TXT "]:
+            elif typ in [b"TXT "]:
                 elem = TXT(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
                 elem.read()
-            elif typ in ["TEX "]:
+            elif typ in [b"TEX "]:
                 elem = Texture(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
-            elif typ in ["SMES", "SMAT"]:
+            elif typ in [b"SMES", b"SMAT"]:
                 elem = Geometry(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
-            elif typ in ["ARC "]:
+            elif typ in [b"ARC "]:
                 elem = ARC(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
             else:
                 elem = Element(typ, self.str_table.get_str_slot(i), flags, is_cmp, fw)
@@ -614,9 +614,9 @@ class Package(Resource):
             dec_curr_data_off = self.NEXT_BLOCK_ADDR(dec_curr_off, is_lrg)
             delta = dec_curr_data_off - dec_curr_off
             if is_lrg and delta > 0:
-                chunk_data = zlib.compress("\x00" * delta)
+                chunk_data = zlib.compress(b"\0" * delta)
                 if len(chunk_data) > delta:
-                    chunk_data = "\x00" * delta
+                    chunk_data = b"\0" * delta
 
                 fh.write(chunk_data)
                 curr_off = self.NEXT_BLOCK_ADDR(curr_off + len(chunk_data))
@@ -642,7 +642,7 @@ class Package(Resource):
         fh.write(
             struct.pack(
                 "=6sH6I",
-                b"PACK\n" + b"0" if self.typ0 else " ",
+                b"PACK\n" + b"0" if self.typ0 else b" ",
                 len(self.entries),
                 ptr_off,
                 str_table_off,
@@ -696,7 +696,7 @@ class Package(Resource):
 
     def get_header(self):
         return (
-            "PAK ",
+            b"PAK ",
             self.dec_len,
             self.dec_data_off,
             self.unk,
@@ -772,7 +772,7 @@ class Image(object):
             # We need to grab the actual (compressed) size from the PACKage header
             res = None
             addr = self.BLOCK_NUM_ADDR(blk_num)
-            if idx_entry[0x0] == "PAK ":
+            if idx_entry[0x0] == b"PAK ":
                 self.fh.seek(addr)
                 (
                     typ,
