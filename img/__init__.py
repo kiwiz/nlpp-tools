@@ -110,8 +110,9 @@ class Element(object):
         cmp_len = dec_len = len(data)
 
         if self.is_cmp:
-            data = zlib.compress(data)
+            data = zlib.compress(data, level=9)
             cmp_len = len(data)
+            print(cmp_len)
         fh.write(data)
 
         return cmp_len, dec_len
@@ -228,10 +229,10 @@ class SERI(Element):
         for i in range(cnt):
             name_off, val_off = struct.unpack("=2H", self.fw.read(0x4))
             off_table.append([name_off, val_off])
-        type_table = list(self.fw.read(cnt))
+        type_table = self.fw.read(cnt)
 
         for i in range(cnt):
-            etyp = type_table[i]
+            etyp = type_table[i:i+1]
             name_off, val_off = off_table[i]
             k = self.str_table[name_off]
             val = None
@@ -497,7 +498,7 @@ class Package(Resource):
         self.typ0 = True
         self.dec_len = 0x0
         self.dec_data_off = 0x0
-        self.unk = unk  # FIXME: Storing this because I have no idea what it does!
+        self.unk = unk  # ???: Either 128 or 0
         self.entries = []
         self.str_table = StrTable()
 
@@ -517,7 +518,7 @@ class Package(Resource):
         ) = Package.parse_header(data)
         self.dec_len = dec_len
         self.dec_data_off = dec_data_off
-        self.typ0 = typ[5] == 0x30
+        self.typ0 = typ[5:6] == b"0"
 
         off = self.fw.tell()
         self.fw.seek(str_table_off)

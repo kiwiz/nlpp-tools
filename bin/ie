@@ -53,10 +53,10 @@ else:
     for i in args.idx:
         if i < 0 or i >= len(img.entries):
             print('[-] Idx "%04d" not found!' % i)
-            sys.exit(1)
+            sys.exit(2)
         if img.entries[i] is None:
             print('[-] Idx "%04d" is empty!' % i)
-            sys.exit(2)
+            sys.exit(3)
         entries.append((i, img.entries[i]))
 
 if args.cmd == "unpack":

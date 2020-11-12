@@ -73,7 +73,7 @@ if args.cmd == "unpack":
 
         fn = element_fn(args.pkg_dir, res.fn, type(res) == SERI)
 
-        print('[+] Unpacking %i: "%s"' % (k, res.fn))
+        print('[+] Unpacking %i: "%s"' % (k, res.fn.decode("utf8")))
         rfh = open(fn, "wb")
         rfh.write(res.parsed_for_file())
         rfh.close()

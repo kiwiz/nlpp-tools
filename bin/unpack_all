@@ -6,6 +6,7 @@ for i in img_data/!(new_*)
 do
   if [[ -f $i ]]
   then
-    ./pe $i unpack
+    echo $i
+    bin/pe $i unpack
   fi
 done
