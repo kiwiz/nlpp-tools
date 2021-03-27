@@ -22,7 +22,8 @@ def main():
 
     writer = csv.writer(open(args.output, "w", encoding="utf8", newline=""))
 
-    for idx, jap, eng in csv.reader(open(args.input, "r", encoding="utf8", newline="")):
+    for line in csv.reader(open(args.input, "r", encoding="utf8", newline="")):
+        idx, jap, eng = line[0:3]
         orig = eng
         for a, b in MAPPINGS.items():
             eng = eng.replace(a, b)
